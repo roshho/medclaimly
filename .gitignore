@@ -3,6 +3,7 @@ dataset/mimic-iv-3.1/hosp/*
 dataset/mimic-iv-3.1/icu/*
 dataset/mimic-iv-3.1/*
 dataset/synthea-with-dependencies.jar
+dataset/BSA-PUF.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
