@@ -82,12 +82,12 @@
 |CMS T-MSIS|Real data with real denial cases, 6-12 months of request time, >$3.5k annunal data rental fee |Overkill for prototype | |
 |MIMIC-IV| EHR hospital care info including ICD, CPT | No billing information, not worth
 |CMS SynPUF| Large synthetic medicare and medicaid dat, but no explicit denial data | Worth using payer information as proxy| |
+|CMS Limited Data Set (LDS)|Limited dataset with medicare claims, but requires LDS request page| | https://www.cms.gov/data-research/cms-data/data-available-researchers/limited-data-set-lds-files|
 
 
 # MVP
-	
 
-- Current process:
+- v1 process:
 	- Due to limited information from CMS, will primarily base data on Synthea
 	- Will follow process in "Fraud Detection in Health Insurance Using GNNs", which shows higher performance than isolation forrest (already as seen in other papers)
 		- https://www.kaggle.com/code/alirezaebrahimi/fraud-detection-in-health-insurance-using-gnns. 
@@ -97,6 +97,9 @@
 	4) Inject anomolie - duplication submission, services not covered, lack pre-approval, missing ICD/CPT, insufficient documents for medicial necessities, timely filing limit exceeded, incorrect patient/policy information, referral expired, authorization mismatch, bundling multiple procedures, maximum benefit exceeded, frequency over plan limit
 	5) determine not qulitateive data and qualitative data
 	6) evaluation - ROC-AU 
+
+- v2 process
+	- 
 - Models to consider: isolation forest?, SL-GAD?, medgemma?
 
 # Takeaway:
