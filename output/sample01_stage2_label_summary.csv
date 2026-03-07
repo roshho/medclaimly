@@ -1,0 +1,6 @@
+is_denied,denial_sources,claim_count
+0,"",3751223
+1,mue_frequency,332552
+1,ptp_conflict,133093
+1,mue_frequency|ptp_conflict,80723
+1,drg_shortstay_upcoding,64038

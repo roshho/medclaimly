@@ -9,8 +9,30 @@
 - pier to pier evluation: insruance hired doctors trying to dispute claims
 - consider medical records request from insurance that request from clinic (dataVant - is one such contractors)
 
-- autonomus AI billing from auto transcribing
+## Required data for rules
+- ICD <-> HCPCS Validity matrix
+	- Based on ICD code, what procedure/supplies can be issued
+	- Issue: varies across every insurance based on coverage
+	- However most follow: NCCI PTP/MUE edits (HCPCS/CPT pairs) + LCD/NCD policies (explicit ICD links)
+		- NCCI: National Correct Coding Initiative 
+		- LCD/NCD = context coverage
+			- LCD: Local Coverage Determination
+				- Cna skip, same as NCDs except rare DME (Durable Medical Eqiuipment like wheelchairs, orthotics....)
+			- NCD: National Coverage Determination
+			- MCD: Database/search tool housing all LCDs, NCDs, Articles (billing/coding details with code lists). CPT/HCPCS/ICD now mostly in Articles (not LCDs except DME). I.e. this is where you download
+		- PTP: rocedure to Procedure
+		- MUE: Medically Unlikely Edits
+			- Max # of claims per day  by provider for same beneficiary
+		- NCCI
+		- Change Request: CR
+		- AOC Edits: Add on code edits - added onto procedure, rarely approved. Has 3 types:
+			- Type 1: Used when limited primary proecdure codes. Payable only when primary proceure also paid to same practitioner for the same patient on the same date
+			- Type 2: Used when no specfic primary procedure code in Change Request. Contractors encouraged to create their own acceptable primary codes list.
+			- Type 3: Used when primary proecdure code avilable, but listed codes are limited - can expand list
 
+
+## Meeting with Amir 
+- autonomus AI billing from auto transcribing
 - EMR is trying to come up with billing solution, hospitals have tried to use claim denial appeal softwares. Waystar, claude, rivet, cofactor
 - infusion center and dialysis centers are money makers - bought out by VCs
 	- Look at which departments generate the most money, maybe some surgical specialty
@@ -18,7 +40,8 @@
 - automated translation for medical purpose?
 - social case worker AI wrapper
 
-## Meeting with Joe cca Feb 25
+
+## Meeting with Dr Joe cca Feb 25
 - Dentistry typically appealand denial
 - Dentistry different from denistry 
 	- Many of common denials in hospital rejection are not as common in denistry
@@ -69,6 +92,7 @@
 |EHR Codes|Collective: All codes (ICD/CPT/HCPCS/RxNorm)|Same as ICD/CPT|
 |DOS|Date of Service|Dates of charges|
 |LOS|Length of Stay. If LOS > DRG geometric length of stay, means staying longer than avg benchmarks||
+|DRG| Diagnosis-Related Group - categorize hospital stay based on diagnoses and treatment|In-patient stay labels|
 
 # Datasets:
 |Dataset|Function|Remarks|Link|
@@ -79,27 +103,25 @@
 |Kaggle - SynthetiC Healthcare Claims Dataset|Denial case samples|Not enough detail|https://www.kaggle.com/datasets/abuthahir1998/synthetic-ar-medical-dataset-with-realistic-denial |
 |Medicaid CMS dataset| Denial case samples|Not enough detail (I think?)|https://data.cms.gov/sites/default/files/2023-05/d51e1218-68c3-4c7c-9598-0b81f22fe903/User%20Guide%20-%20CMS%20Synthetic%20RIF%20Files%20May%202023_AM508_v2.pdf |
 |CMS BSA Hospice Beneficary | 5% de-identified real medicare data, but no explicit denial data  | | https://www.cms.gov/data-research/statistics-trends-and-reports/basic-stand-alone-medicare-claims-public-use-files/bsa-hospice-beneficiary-puf |
-|CMS T-MSIS|Real data with real denial cases, 6-12 months of request time, >$3.5k annunal data rental fee |Overkill for prototype | |
+|CMS ResDAC/T-MSIS|Real data with real denial cases, 6-12 months of request time, >$3.5k annunal data rental fee |Overkill for prototype, but a good first step to acquire limited medicare RIF sample as test dataset| |
 |MIMIC-IV| EHR hospital care info including ICD, CPT | No billing information, not worth
 |CMS SynPUF| Large synthetic medicare and medicaid dat, but no explicit denial data | Worth using payer information as proxy| |
 |CMS Limited Data Set (LDS)|Limited dataset with medicare claims, but requires LDS request page| | https://www.cms.gov/data-research/cms-data/data-available-researchers/limited-data-set-lds-files|
+|HCUP-US|Healthcare cost and utilization project|Similar to CNS SynPUF, but real cases|https://hcup-us.ahrq.gov/ |
+|APCD|All-Payer Claims Data from states - prices vary, and data quality varies. | Worth while dataset from, e.g. Colorado APCD, but would be more beneficial if doing that specfic state expansion| |
+
+# Rules
+|Data|Remarks|Link|
+|---|---|---|
+|CMS MUE 2026| |https://www.cms.gov/medicare/coding-billing/national-correct-coding-initiative-ncci-edits/medicare-ncci-medically-unlikely-edits-mues|
+|CMS PTP 2026 Hospital & Practitioner| | https://www.cms.gov/medicare/coding-billing/national-correct-coding-initiative-ncci-edits/medicare-ncci-procedure-procedure-ptp-edits|
+|CMS NCD, MCD| Medicare Coverage Database - central CMS repo for LCD & NCD | https://www.cms.gov/medicare-coverage-database/downloads/downloads.aspx |
+|CMS HCPCS alpha numeric coverage labeling| |https://www.cms.gov/medicare/coding-billing/healthcare-common-procedure-system/quarterly-update|
+|DRG Files| Provides averages, e.g. length of stays | https://www.cms.gov/Medicare/Medicare-Fee-for-Service-Payment/AcuteInpatientPPS/Acute-Inpatient-Files-for-Download-Items/CMS1247873 |
+|CMS Beneficary context year | Part of SynPUF - shows deductables left - useful for classifying via rules | | 
 
 
 # MVP
-
-- v1 process:
-	- Due to limited information from CMS, will primarily base data on Synthea
-	- Will follow process in "Fraud Detection in Health Insurance Using GNNs", which shows higher performance than isolation forrest (already as seen in other papers)
-		- https://www.kaggle.com/code/alirezaebrahimi/fraud-detection-in-health-insurance-using-gnns. 
-	1) Generate data
-	2) Drop empty columns
-	3) Handle missing values - either fill in data "missing" for physicians or drop rows where essential details like dates/identifiers are not available
-	4) Inject anomolie - duplication submission, services not covered, lack pre-approval, missing ICD/CPT, insufficient documents for medicial necessities, timely filing limit exceeded, incorrect patient/policy information, referral expired, authorization mismatch, bundling multiple procedures, maximum benefit exceeded, frequency over plan limit
-	5) determine not qulitateive data and qualitative data
-	6) evaluation - ROC-AU 
-
-- v2 process
-	- 
 - Models to consider: isolation forest?, SL-GAD?, medgemma?
 
 # Takeaway:
@@ -110,26 +132,3 @@
 - Check CMS data:
 
 
-
-T-MSIS data, including denied claims via CLAIM-DENIED-INDICATOR ("0" for full denial) and CLAIM-LINE-STATUS (e.g., "542", "585", "654" for denied lines), is accessible through CMS's T-MSIS Analytic Files (TAF)—research-ready versions of state-submitted Medicaid/CHIP data.
-
-No public downloads; requires a Data Use Agreement (DUA) via CMS or ResDAC/CCW for researchers.
-Access Process
-
-Submit via CMS Research Data Assistance Center (ResDAC) or Chronic Conditions Data Warehouse (CCW).
-
-    ResDAC: Apply for TAF files (claims/enrollment); training required. Details at resdac.org.​
-
-    CCW: TAF Research Identifiable Files (RIFs); register at ccwdata.org.​
-
-    CMS Enterprise Portal: States view dashboard; researchers request via DataConnect/IDR.​
-
-Key Documentation
-
-    Data Guide: tmsis.medicaid.gov/dataguide (dictionary, validation rules).
-
-    Denied Claims Guidance: medicaid.gov/tmsis/dataguide/t-msis-coding-blog/cms-guidance-reporting-denied-claims... (full specs).​
-
-    TAF Tech Docs: Claims files cover inpatient/OT/long-term care/Prescription; includes adjustment codes.​
-
-Data covers 2010–present (full states), with denial reasons in ADJUSTMENT-REASON-CODE.
