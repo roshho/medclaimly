@@ -1,6 +1,14 @@
-# datasets
+# datasets (raw CMS/SynPUF + MIMIC, too large for git)
 dataset/
 rules/
+
+# pipeline outputs: ignore large generated parquets at the top level,
+# keep small committed artifacts (model.json, metrics CSVs, reference tables)
+output/*.parquet
+output/policy_corpus_drg207_focus/
+
+# local secrets
+.env
 
 # Rosh's rules
 .tmp

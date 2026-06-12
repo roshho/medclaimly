@@ -20,10 +20,10 @@
 				- Cna skip, same as NCDs except rare DME (Durable Medical Eqiuipment like wheelchairs, orthotics....)
 			- NCD: National Coverage Determination
 			- MCD: Database/search tool housing all LCDs, NCDs, Articles (billing/coding details with code lists). CPT/HCPCS/ICD now mostly in Articles (not LCDs except DME). I.e. this is where you download
-		- PTP: rocedure to Procedure
+		- PTP: Procedure to Procedure
 		- MUE: Medically Unlikely Edits
 			- Max # of claims per day  by provider for same beneficiary
-		- NCCI
+		- NCCI: National Correct Coding Initiative,
 		- Change Request: CR
 		- AOC Edits: Add on code edits - added onto procedure, rarely approved. Has 3 types:
 			- Type 1: Used when limited primary proecdure codes. Payable only when primary proceure also paid to same practitioner for the same patient on the same date
@@ -75,24 +75,27 @@
 ## Muhammad Afzal's denial [linkedin claim denial project](https://www.linkedin.com/posts/muhammad-afzal-7594581a9_github-92-afzalclaimsdenialanalyzer-activity-7424417626711318529-49y0/)
 - Assigned cases randomly to be denied, thus not credible way to get denied cases
 
-# Models:
+# Models
+
 |Model|Description|Use case|
 |---|---|---|
 |Medtok|AI advanced dictionray for explaining IPT/CPT code| |
 |GatorTron / ClinicalBERT|EHR Code prediction, however GPT O3 and DeepSeek R1 finetuned performs better in accuracy - just use multi-agent query using medgemma instead|
 |LLMCoder|ICD-10|Similar to EHR Code prediction|
 
-# Keywords:
-|Keyword|Defintion|Summary|
-|---|---|---|
-|CARC codes|Claim Adjustment Reason Codes| Rejection reason|
-|LCD/NCD |Local Coverage Determination/National Coverage Determination||
-|ICD |identifies patient diagnoses and conditions |Diagnosis/justifies necessities - "why"|
-|CPT|describes procedures/services performed|Procedure - "what"|
-|EHR Codes|Collective: All codes (ICD/CPT/HCPCS/RxNorm)|Same as ICD/CPT|
-|DOS|Date of Service|Dates of charges|
-|LOS|Length of Stay. If LOS > DRG geometric length of stay, means staying longer than avg benchmarks||
-|DRG| Diagnosis-Related Group - categorize hospital stay based on diagnoses and treatment|In-patient stay labels|
+# Keywords
+
+| Keyword    | Defintion                                                                                       | Summary                                 |
+| ---------- | ----------------------------------------------------------------------------------------------- | --------------------------------------- |
+| CARC codes | Claim Adjustment Reason Codes                                                                   | Rejection reason                        |
+| LCD/NCD    | Local Coverage Determination/National Coverage Determination                                    |                                         |
+| ICD        | identifies patient diagnoses and conditions                                                     | Diagnosis/justifies necessities - "why" |
+| CPT        | describes procedures/services performed                                                         | Procedure - "what"                      |
+| EHR Codes  | Collective: All codes (ICD/CPT/HCPCS/RxNorm)                                                    | Same as ICD/CPT                         |
+| DOS        | Date of Service                                                                                 | Dates of charges                        |
+| LOS        | Length of Stay. If LOS > DRG geometric length of stay, means staying longer than avg benchmarks |                                         |
+| DRG        | Diagnosis-Related Group - categorize hospital stay based on diagnoses and treatment             | In-patient stay labels                  |
+| IVR        | Interactive Voice Response - automated phone/portal system to check claim status.               |                                         |
 
 # Datasets:
 |Dataset|Function|Remarks|Link|
@@ -120,6 +123,16 @@
 |DRG Files| Provides averages, e.g. length of stays | https://www.cms.gov/Medicare/Medicare-Fee-for-Service-Payment/AcuteInpatientPPS/Acute-Inpatient-Files-for-Download-Items/CMS1247873 |
 |CMS Beneficary context year | Part of SynPUF - shows deductables left - useful for classifying via rules | | 
 
+# Voice synthesis notes
+- Things that can't be solved by email:
+	1. Provider v Insurance Payer
+		- IVR (automated voice services) typically lack complete information andonly provide status (e.g. claim pending), not exact issue (e.g. need medical records for CPT 99214)
+		- Authorizations and medical necessity appeals:often providers need authoarization from payer and need to obtain payer received confirmation and reference number
+	2. Peer-to-peer review
+		- Payer medical provider will dispute provider medical necessity
+			- Most important effective appeals
+	3. Patient to payer
+		- Least common and vague - not applicable in our case
 
 # MVP
 - Models to consider: isolation forest?, SL-GAD?, medgemma?
@@ -130,5 +143,48 @@
 	- manufacturing dataset how to classify for defects
 - Contact ansaf
 - Check CMS data:
+
+
+# Pipeline results & status (dev log, preserved from old README)
+
+## Approach history
+- **v1 (failed):** trained on MIMIC-IV. No billing/denial labels, so denials had to be
+  synthesized by mutating admissions — caused distribution skew and poor generalization.
+  Scripts removed (`src/src_mimic_iv/`).
+- **v2:** moved to CMS DE-SynPUF. Engineered denial proxies (zero-payment, non-covered,
+  benefits-exhausted). Proxy denial rate came out ~39.8%, far above the real ~15-17%
+  Medicare rate — driven mostly by missing codes/dates/IDs (99.4% of claims had missing
+  documentation). Symptom (`zero_payment`) vs root-cause layering was added.
+- **v3 (current):** two-stage pipeline with soft/weak labels + confidence threshold. The
+  XGBoost classifier is used as a **pre-emptive denial-risk proxy**, not a verdict.
+
+## Stage results (CMS DE-SynPUF Sample 1, 11.15M claims)
+- Stage 1 (deterministic rules): 176,994 hard denies (1.59%), 10.97M passed to ML.
+- Stage 2 (XGBoost): trained on 5.47M labeled rows, positive rate 31.46%.
+  - PR-AUC: **0.9754**
+  - Best F1: **0.9090** @ threshold 0.6526
+  - Recall @ P≥0.80: **0.9555**
+  - Patient-level split on `DESYNPUF_ID` (no beneficiary leakage); pre-train leakage assertion.
+
+## Known limitations
+- SynPUF "denial" labels are derived from the same reference rules used as features —
+  the model partially learns its own rules back.
+- HCPCS/MUE/PTP reference files are 2026 vintage applied to 2008-2010 data — some code
+  coverage statuses have changed.
+- No real D-type denial ground truth exists in SynPUF; Stage 2 is a validated prototype
+  pending ResDAC access.
+- Final joined artifact scores only a subset of pass-through rows (grouped inference on
+  labeled composite keys); full coverage needs an inference-persistence pass.
+
+## TODO / roadmap
+- [ ] ICD ↔ HCPCS validity matrix per payer
+- [ ] Prior-authorization + pre-claim review features (post-2020 CMS PA list)
+- [ ] Update DRG weight files to 2026
+- [ ] Shift rules references from soft signals to hard-deny rules for modern claims
+- [ ] ICD-9 → ICD-10
+- [ ] Retrain Stage 2 on real adjudication labels (incl. D-type denials)
+- [ ] RAG on latest NCD/LCD policy for appeal drafting / pre-emptive submission
+- [ ] Local RAG vector store (currently relies on scikit-learn embeddings in-process)
+- [ ] Multi-claim support — query the pipeline parquet to load any flagged claim dynamically
 
 

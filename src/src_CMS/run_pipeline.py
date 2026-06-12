@@ -98,10 +98,11 @@ def join_stage1_stage2_outputs(sample_id: int) -> Path:
     y_prob = model.predict_proba(X)[:, 1]
     
     df_features["stage2_denial_probability"] = y_prob
-    score_keys = ["CLM_ID", "DESYNPUF_ID", "CLM_FROM_DT", "CLM_THRU_DT", "CLM_DRG_CD"]
+    score_keys = ["sample_id", "CLM_ID", "DESYNPUF_ID", "CLM_FROM_DT", "CLM_THRU_DT", "CLM_DRG_CD"]
     df_stage2_scored = (
         df_features[score_keys + ["stage2_denial_probability"]]
-        .groupby(score_keys, as_index=False)["stage2_denial_probability"]
+        # Keep rows where any join key is NULL; default groupby(dropna=True) silently drops them.
+        .groupby(score_keys, as_index=False, dropna=False)["stage2_denial_probability"]
         .max()
     )
     
@@ -121,7 +122,8 @@ def join_stage1_stage2_outputs(sample_id: int) -> Path:
             END AS stage2_denial_probability
         FROM stage1 s1
         LEFT JOIN stage2_scored s2
-          ON s1.CLM_ID IS NOT DISTINCT FROM s2.CLM_ID
+                    ON s1.sample_id IS NOT DISTINCT FROM s2.sample_id
+                 AND s1.CLM_ID IS NOT DISTINCT FROM s2.CLM_ID
          AND s1.DESYNPUF_ID IS NOT DISTINCT FROM s2.DESYNPUF_ID
          AND s1.CLM_FROM_DT IS NOT DISTINCT FROM s2.CLM_FROM_DT
          AND s1.CLM_THRU_DT IS NOT DISTINCT FROM s2.CLM_THRU_DT

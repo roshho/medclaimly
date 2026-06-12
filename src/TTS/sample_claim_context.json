@@ -1,0 +1,91 @@
+{
+  "scenario_2": {
+    "provider": {
+      "name": "Riverside Medical Group",
+      "npi": "1234567890",
+      "phone": "555-234-5678",
+      "fax": "555-123-4567"
+    },
+    "claim": {
+      "claim_id": "196471176998116",
+      "beneficiary_id": "819303389B2AC8B3",
+      "date_of_service": "2008-02-16",
+      "date_thru": "2008-02-23",
+      "drg_code": "207",
+      "drg_description": "Respiratory system diagnosis with ventilator support 96+ hours",
+      "diagnoses": {
+        "49322": "Chronic obstructive asthma with acute exacerbation",
+        "1124": "Candidiasis of lung",
+        "42731": "Atrial fibrillation"
+      },
+      "length_of_stay_days": 7,
+      "claim_payment_amount": 8000.00
+    },
+    "classifier": {
+      "stage1_decision": "PASS_TO_ML",
+      "stage1_reason_code": "NONE",
+      "denial_risk_score": 0.999998,
+      "denial_source": "drg_shortstay_upcoding",
+      "denial_confidence": 0.85
+    },
+    "ivr_status": {
+      "claim_status": "denied",
+      "carc_code": "CO-4",
+      "carc_description": "The procedure code is inconsistent with the modifier used or a required modifier is missing",
+      "rarc_code": "N386",
+      "rarc_description": "This decision was based on a Local Coverage Determination (LCD)"
+    },
+    "call_reference_number": "RN-48291057",
+    "caveat": "DRG 207 geometric mean LOS is 9-12 days. A 7-day stay is shorter than average but clinically complex (ventilator >=96 hrs, pulmonary candidiasis, atrial fibrillation). The synthetic label may be a false positive."
+  },
+  "scenario_3": {
+    "provider": {
+      "name": "Riverside Medical Group",
+      "npi": "1234567890",
+      "phone": "555-234-5678",
+      "fax": "555-234-5679",
+      "appeal_fax": "1-888-555-0199"
+    },
+    "claim": {
+      "claim_id": "196471176998116",
+      "beneficiary_id": "819303389B2AC8B3",
+      "date_of_service": "2008-02-16",
+      "date_thru": "2008-02-23",
+      "drg_code": "207",
+      "drg_description": "Respiratory system diagnosis with ventilator support 96+ hours",
+      "diagnoses": {
+        "49322": "Chronic obstructive asthma with acute exacerbation",
+        "1124": "Candidiasis of lung",
+        "42731": "Atrial fibrillation"
+      },
+      "length_of_stay_days": 7,
+      "denial_reason": "Length of stay inconsistent with DRG assignment"
+    },
+    "classifier": {
+      "stage1_decision": "PASS_TO_ML",
+      "denial_risk_score": 0.999998,
+      "denial_source": "drg_shortstay_upcoding",
+      "denial_confidence": 0.85
+    },
+    "prior_call_reference": "RN-48291057",
+    "appeal": {
+      "type": "Medicare Redetermination",
+      "submission_method": "fax",
+      "carc_code": "CO-4",
+      "rarc_code": "N386",
+      "clinical_justification": "Patient required ventilator support exceeding 96 hours due to acute exacerbation of chronic obstructive asthma complicated by pulmonary candidiasis. Concurrent atrial fibrillation required cardiac monitoring extending the stay. The 7-day LOS was clinically necessary despite being shorter than the DRG geometric mean.",
+      "supporting_docs": [
+        "Admission history and physical",
+        "Daily progress notes (7 days)",
+        "Ventilator weaning protocol and logs",
+        "Discharge summary",
+        "Medical necessity letter from attending pulmonologist"
+      ],
+      "appeal_tracking_number": "RN-73058412",
+      "review_timeline_days": 30,
+      "determination_method": "Written determination by mail",
+      "filing_deadline_days": 120
+    },
+    "caveat": "DRG 207 geometric mean LOS is 9-12 days. A 7-day stay is shorter than average but clinically complex (ventilator >=96 hrs, pulmonary candidiasis, atrial fibrillation). The synthetic label may be a false positive."
+  }
+}

@@ -1,0 +1,37 @@
+[
+  {
+    "id": "demo-001",
+    "denial_type": "D",
+    "denial_reason": "Medically Unlikely Edit (MUE) exceeded",
+    "denial_code": "D-MUE-001",
+    "ground_truth_appeal": "Units billed reflect multi-site procedure same DOS with supporting op note and modifier documentation."
+  },
+  {
+    "id": "demo-002",
+    "denial_type": "D",
+    "denial_reason": "Missing prior authorization",
+    "denial_code": "D-AUTH-002",
+    "ground_truth_appeal": "Retro-authorization reference and medical urgency documentation establish covered exception pathway."
+  },
+  {
+    "id": "demo-003",
+    "denial_type": "D",
+    "denial_reason": "Medical necessity documentation insufficient",
+    "denial_code": "D-MN-003",
+    "ground_truth_appeal": "Clinical note + labs + ventilator duration satisfy LCD/NCD necessity criteria for inpatient care."
+  },
+  {
+    "id": "demo-004",
+    "denial_type": "D",
+    "denial_reason": "Non-covered service or coding mismatch",
+    "denial_code": "D-COVERAGE-004",
+    "ground_truth_appeal": "Resubmission maps corrected HCPCS/CPT with diagnosis alignment and modifier usage."
+  },
+  {
+    "id": "demo-005",
+    "denial_type": "D",
+    "denial_reason": "Insufficient claim evidence - manual review needed",
+    "denial_code": "D-REVIEW-000",
+    "ground_truth_appeal": "Additional records and payer call reference should be attached before final reconsideration request."
+  }
+]
